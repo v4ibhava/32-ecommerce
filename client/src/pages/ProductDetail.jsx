@@ -58,12 +58,29 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!userInfo) {
       navigate('/login');
       return;
     }
-    navigate('/checkout');
+
+    try {
+      setAddingToCart(true);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      };
+      await axios.post('/api/users/cart', { productId: product._id, quantity: 1 }, config);
+      refreshCart();
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Error buying now:', error);
+      toast.error('Failed to process order');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   if (loading) {
