@@ -134,6 +134,7 @@ const Checkout = () => {
 
     try {
       setPlacingOrder(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
       const orderItems = cartItems.map(item => ({
         product: item.product._id,
@@ -152,7 +153,6 @@ const Checkout = () => {
           },
         };
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         razorpayOrder = await axios.post(`${apiUrl}/api/orders/create-razorpay-order`, {
           amount: calculateTotal()
         }, config);
@@ -177,10 +177,8 @@ const Checkout = () => {
         totalAmount: calculateTotal()
       };
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       await axios.post(`${apiUrl}/api/orders`, orderData, orderConfig);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       await axios.delete(`${apiUrl}/api/users/cart/clear`, {
         headers: { Authorization: `Bearer ${userInfo.token}` }
       });
