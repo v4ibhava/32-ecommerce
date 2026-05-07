@@ -22,7 +22,8 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`/api/products/${id}`);
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const { data } = await axios.get(`${apiUrl}/api/products/${id}`);
         setProduct(data);
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -47,7 +48,8 @@ const ProductDetail = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      await axios.post('/api/users/cart', { productId: product._id, quantity: 1 }, config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${apiUrl}/api/users/cart`, { productId: product._id, quantity: 1 }, config);
       toast.success('Added to your cart!');
       refreshCart();
     } catch (error) {
@@ -72,7 +74,8 @@ const ProductDetail = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      await axios.post('/api/users/cart', { productId: product._id, quantity: 1 }, config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${apiUrl}/api/users/cart`, { productId: product._id, quantity: 1 }, config);
       refreshCart();
       navigate('/checkout');
     } catch (error) {

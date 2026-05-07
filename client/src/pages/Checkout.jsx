@@ -38,7 +38,8 @@ const Checkout = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      const { data } = await axios.get('/api/users/cart', config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const { data } = await axios.get(`${apiUrl}/api/users/cart`, config);
       const validItems = data.filter(item => item.product !== null);
       setCartItems(validItems);
     } catch (error) {
@@ -101,7 +102,8 @@ const Checkout = () => {
                 Authorization: `Bearer ${userInfo.token}`,
               },
             };
-            await axios.post('/api/orders/verify-payment', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            await axios.post(`${apiUrl}/api/orders/verify-payment`, {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature
@@ -150,7 +152,8 @@ const Checkout = () => {
           },
         };
 
-        razorpayOrder = await axios.post('/api/orders/create-razorpay-order', {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        razorpayOrder = await axios.post(`${apiUrl}/api/orders/create-razorpay-order`, {
           amount: calculateTotal()
         }, config);
 
@@ -174,9 +177,11 @@ const Checkout = () => {
         totalAmount: calculateTotal()
       };
 
-      await axios.post('/api/orders', orderData, orderConfig);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.post(`${apiUrl}/api/orders`, orderData, orderConfig);
 
-      await axios.delete('/api/users/cart/clear', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.delete(`${apiUrl}/api/users/cart/clear`, {
         headers: { Authorization: `Bearer ${userInfo.token}` }
       });
 
