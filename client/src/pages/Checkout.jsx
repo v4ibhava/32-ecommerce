@@ -1,19 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+
 import { CreditCard, Truck, ShieldCheck, ChevronLeft, Loader2 } from 'lucide-react';
 
 const Checkout = () => {
   const { refreshCart } = useCart();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    pincode: ''
+  });
   const navigate = useNavigate();
+  const razorpayLoaded = useRef(false);
 
-  const userInfo = localStorage.getItem('userInfo') 
-    ? JSON.parse(localStorage.getItem('userInfo')) 
+  const userInfo = localStorage.getItem('userInfo')
+    ? JSON.parse(localStorage.getItem('userInfo'))
     : null;
 
   const fetchCart = async () => {
@@ -44,6 +54,143 @@ const Checkout = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  };
+
+  const handleInputChange = (e) => {
+    setShippingAddress({
+      ...shippingAddress,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRazorpayPayment = async (razorpayOrder) => {
+    await loadRazorpayScript();
+
+    return new Promise((resolve, reject) => {
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKeyId) {
+        reject(new Error('Missing Razorpay public key. Add VITE_RAZORPAY_KEY_ID to client/.env.local.'));
+        return;
+      }
+
+      const options = {
+        key: razorpayKeyId,
+        amount: razorpayOrder.amount,
+        currency: 'INR',
+        name: 'ESP32 Shop',
+        description: 'Order Payment',
+        order_id: razorpayOrder.id,
+        handler: async (response) => {
+          try {
+            const verifyConfig = {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${userInfo.token}`,
+              },
+            };
+            await axios.post('/api/orders/verify-payment', {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            }, verifyConfig);
+            resolve(response);
+          } catch (error) {
+            reject(error);
+          }
+        },
+        theme: {
+          color: '#2563eb'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      rzp.on('payment.failed', () => {
+        reject(new Error('Payment failed'));
+      });
+    });
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!shippingAddress.fullName || !shippingAddress.address || !shippingAddress.city || !shippingAddress.pincode) {
+      toast.error('Please fill in all shipping details');
+      return;
+    }
+
+    try {
+      setPlacingOrder(true);
+
+      const orderItems = cartItems.map(item => ({
+        product: item.product._id,
+        quantity: item.quantity,
+        price: item.product.price
+      }));
+
+      let razorpayOrder = null;
+      let razorpayPaymentId = null;
+
+      if (paymentMethod === 'cashless') {
+        const config = {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        };
+
+        razorpayOrder = await axios.post('/api/orders/create-razorpay-order', {
+          amount: calculateTotal()
+        }, config);
+
+        const paymentResponse = await handleRazorpayPayment(razorpayOrder.data);
+        razorpayPaymentId = paymentResponse.razorpay_payment_id;
+      }
+
+      const orderConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      };
+
+      const orderData = {
+        orderItems,
+        shippingAddress,
+        paymentMethod,
+        razorpayOrderId: razorpayOrder?.id,
+        razorpayPaymentId,
+        totalAmount: calculateTotal()
+      };
+
+      await axios.post('/api/orders', orderData, orderConfig);
+
+      await axios.delete('/api/users/cart/clear', {
+        headers: { Authorization: `Bearer ${userInfo.token}` }
+      });
+
+      refreshCart();
+      toast.success('Order placed successfully!');
+      navigate('/orders');
+    } catch (error) {
+      console.error('Order error:', error);
+      if (error.message !== 'Payment failed') {
+        toast.error('Failed to place order');
+      }
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   if (loading) {
@@ -77,19 +224,20 @@ const Checkout = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <Navbar />
-      
+
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <Link to="/" className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors mb-8">
+        <Link to="/cart" className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors mb-8">
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Continue Shopping
+          Back to Cart
         </Link>
 
         <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12">
           <h1 className="text-3xl font-black text-gray-900 mb-8 tracking-tight">Checkout</h1>
-          
+
           <div className="space-y-8">
             {/* Shipping Address */}
             <section>
@@ -98,11 +246,39 @@ const Checkout = () => {
                 <h2 className="text-lg font-bold text-gray-900">Shipping Address</h2>
               </div>
               <div className="grid grid-cols-1 gap-4">
-                <input type="text" placeholder="Full Name" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none" />
-                <input type="text" placeholder="Address Line 1" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none" />
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Full Name"
+                  value={shippingAddress.fullName}
+                  onChange={handleInputChange}
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none"
+                />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Address Line 1"
+                  value={shippingAddress.address}
+                  onChange={handleInputChange}
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none"
+                />
                 <div className="grid grid-cols-2 gap-4">
-                  <input type="text" placeholder="City" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none" />
-                  <input type="text" placeholder="Pincode" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none" />
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="City"
+                    value={shippingAddress.city}
+                    onChange={handleInputChange}
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none"
+                  />
+                  <input
+                    type="text"
+                    name="pincode"
+                    placeholder="Pincode"
+                    value={shippingAddress.pincode}
+                    onChange={handleInputChange}
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none"
+                  />
                 </div>
               </div>
             </section>
@@ -113,7 +289,7 @@ const Checkout = () => {
                 <CreditCard className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setPaymentMethod('cod')}
                 className={`w-full p-6 border-2 rounded-2xl flex items-center justify-between transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:border-gray-200'}`}
               >
@@ -123,7 +299,7 @@ const Checkout = () => {
                 </div>
                 <Truck className={paymentMethod === 'cod' ? 'text-blue-600' : 'text-gray-400'} />
               </button>
-              <button 
+              <button
                 onClick={() => setPaymentMethod('cashless')}
                 className={`w-full p-6 border-2 rounded-2xl flex items-center justify-between mt-2 transition-all ${paymentMethod === 'cashless' ? 'border-blue-600 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:border-gray-200'}`}
               >
@@ -164,9 +340,14 @@ const Checkout = () => {
                   </div>
                 </div>
               </div>
-              
-              <button className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-[0.98]">
-                PLACE ORDER
+
+              <button
+                onClick={handlePlaceOrder}
+                disabled={placingOrder}
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {placingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                {placingOrder ? 'Processing...' : 'PLACE ORDER'}
               </button>
             </div>
           </div>

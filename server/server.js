@@ -2,8 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
+const orderRoutes = require('./routes/orderRoutes.js')
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const port = process.env.PORT || 5000;
 
@@ -23,6 +25,7 @@ app.get("/", (req, res) => { res.send("API running") });
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
