@@ -12,10 +12,7 @@ const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
-<<<<<<< HEAD
   const [orderSuccess, setOrderSuccess] = useState(false);
-=======
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
@@ -85,11 +82,7 @@ const Checkout = () => {
     await loadRazorpayScript();
 
     return new Promise((resolve, reject) => {
-<<<<<<< HEAD
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
-=======
-      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id';
       if (!razorpayKeyId) {
         reject(new Error('Missing Razorpay public key. Add VITE_RAZORPAY_KEY_ID to client/.env.local.'));
         return;
@@ -97,7 +90,6 @@ const Checkout = () => {
 
       const options = {
         key: razorpayKeyId,
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
         amount: razorpayOrder.amount,
         currency: 'INR',
         name: 'ESP32 Shop',
@@ -111,12 +103,8 @@ const Checkout = () => {
                 Authorization: `Bearer ${userInfo.token}`,
               },
             };
-<<<<<<< HEAD
-            await axios.post('/api/orders/verify-payment', {
-=======
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             await axios.post(`${apiUrl}/api/orders/verify-payment`, {
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature
@@ -147,10 +135,7 @@ const Checkout = () => {
 
     try {
       setPlacingOrder(true);
-<<<<<<< HEAD
-=======
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
 
       const orderItems = cartItems.map(item => ({
         product: item.product._id,
@@ -169,11 +154,7 @@ const Checkout = () => {
           },
         };
 
-<<<<<<< HEAD
-        razorpayOrder = await axios.post('/api/orders/create-razorpay-order', {
-=======
         razorpayOrder = await axios.post(`${apiUrl}/api/orders/create-razorpay-order`, {
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
           amount: calculateTotal()
         }, config);
 
@@ -192,34 +173,20 @@ const Checkout = () => {
         orderItems,
         shippingAddress,
         paymentMethod,
-<<<<<<< HEAD
         razorpayOrderId: razorpayOrder?.data?.id,
-=======
-        razorpayOrderId: razorpayOrder?.id,
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
         razorpayPaymentId,
         totalAmount: calculateTotal()
       };
 
-<<<<<<< HEAD
-      await axios.post('/api/orders', orderData, orderConfig);
-
-      await axios.delete('/api/users/cart/clear', {
-=======
       await axios.post(`${apiUrl}/api/orders`, orderData, orderConfig);
 
       await axios.delete(`${apiUrl}/api/users/cart/clear`, {
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
         headers: { Authorization: `Bearer ${userInfo.token}` }
       });
 
       refreshCart();
       toast.success('Order placed successfully!');
-<<<<<<< HEAD
       setOrderSuccess(true);
-=======
-      navigate('/orders');
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
     } catch (error) {
       console.error('Order error:', error);
       if (error.message !== 'Payment failed') {
@@ -262,7 +229,6 @@ const Checkout = () => {
     );
   }
 
-<<<<<<< HEAD
   if (orderSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
@@ -295,9 +261,6 @@ const Checkout = () => {
       </div>
     );
   }
-
-=======
->>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <Navbar />
