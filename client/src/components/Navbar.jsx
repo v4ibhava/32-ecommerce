@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Cpu, User, ShoppingCart, LogOut } from 'lucide-react';
+import { Cpu, User, ShoppingCart, LogOut, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
@@ -9,6 +9,8 @@ const Navbar = () => {
   const userInfo = localStorage.getItem('userInfo') 
     ? JSON.parse(localStorage.getItem('userInfo')) 
     : null;
+
+  const isAdmin = userInfo?.role === 'admin';
 
   const handleLogout = () => {
     localStorage.removeItem('userInfo');
@@ -35,8 +37,17 @@ const Navbar = () => {
             </Link>
             
             {userInfo ? (
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-bold text-gray-700">Hi, {userInfo.name.split(' ')[0]}</span>
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-full bg-violet-50 hover:bg-violet-100 transition-colors">
+                    <Shield className="w-4 h-4 text-violet-600" />
+                    <span className="text-sm font-bold text-violet-700">Admin</span>
+                  </Link>
+                )}
+                <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-bold text-gray-700">Hi, {userInfo.name.split(' ')[0]}</span>
+                </Link>
                 <button 
                   onClick={handleLogout}
                   className="p-2 text-gray-500 hover:text-red-600 transition-colors"

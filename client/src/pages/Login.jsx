@@ -19,7 +19,7 @@ const Login = () => {
       const { data } = await axios.post('/api/users/login', { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       toast.success(`Welcome back, ${data.name.split(' ')[0]}!`);
-      navigate('/');
+      navigate(data.role === 'admin' ? '/admin' : '/');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {

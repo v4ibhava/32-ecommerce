@@ -70,4 +70,18 @@ const removeFromCart = async (req, res) => {
     }
 };
 
-module.exports = { addToCart, getCart, updateCartQuantity, removeFromCart };
+// @desc    Clear cart
+// @route   DELETE /api/users/cart/clear
+// @access  Private
+const clearCart = async (req, res) => {
+    const user = await User.findById(req.user._id);
+    if (user) {
+        user.cart = [];
+        await user.save();
+        res.json(user.cart);
+    } else {
+        res.status(404).json({ message: "User not found" });
+    }
+};
+
+module.exports = { addToCart, getCart, updateCartQuantity, removeFromCart, clearCart };
