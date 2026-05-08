@@ -19,7 +19,10 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",
+<<<<<<< HEAD
     "multer": "^2.1.1",
+=======
+>>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
     "razorpay": "^2.9.6"
   },
   "devDependencies": {

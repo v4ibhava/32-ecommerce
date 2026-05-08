@@ -29,7 +29,8 @@ const Cart = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      const { data } = await axios.get('/api/users/cart', config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const { data } = await axios.get(`${apiUrl}/api/users/cart`, config);
       console.log('Cart data fetched:', data);
       const validItems = data.filter(item => item.product !== null);
       setCartItems(validItems);
@@ -50,7 +51,8 @@ const Cart = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      await axios.put('/api/users/cart', { productId, quantity }, config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.put(`${apiUrl}/api/users/cart`, { productId, quantity }, config);
       fetchCart(false);
       refreshCart();
     } catch (error) {
@@ -65,7 +67,8 @@ const Cart = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      await axios.delete(`/api/users/cart/${productId}`, config);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      await axios.delete(`${apiUrl}/api/users/cart/${productId}`, config);
       fetchCart(false);
       refreshCart();
       toast.success('Item removed');

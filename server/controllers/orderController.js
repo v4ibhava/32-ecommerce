@@ -2,10 +2,26 @@ const Razorpay = require("razorpay");
 const Order = require("../models/Order");
 const User = require("../models/User");
 
+<<<<<<< HEAD
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+=======
+const getRazorpayInstance = () => {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+        throw new Error("Missing Razorpay credentials in environment variables");
+    }
+
+    return new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret
+    });
+};
+>>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
 
 // @desc    Create Razorpay order
 // @route   POST /api/orders/create-razorpay-order
@@ -13,6 +29,10 @@ const razorpay = new Razorpay({
 const createRazorpayOrder = async (req, res) => {
     try {
         const { amount } = req.body;
+<<<<<<< HEAD
+=======
+        const razorpay = getRazorpayInstance();
+>>>>>>> 1558049f4fa5d377d921f15b1032ade793e65133
         
         const razorpayOrder = await razorpay.orders.create({
             amount: amount * 100,
