@@ -16,7 +16,7 @@ const Login = () => {
     try {
       setLoading(true);
       setError('');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || '';
       const { data } = await axios.post(`${apiUrl}/api/users/login`, { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       toast.success(`Welcome back, ${data.name.split(' ')[0]}!`);

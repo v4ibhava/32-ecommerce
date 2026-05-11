@@ -8,7 +8,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5000',
+      '/api': {
+        target: 'https://three2-ecommerce.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   }
 })

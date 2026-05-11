@@ -17,7 +17,7 @@ const Register = () => {
     try {
       setLoading(true);
       setError('');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const { data } = await axios.post(`${apiUrl}/api/users/register`, { name, email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       toast.success('Account created successfully!');

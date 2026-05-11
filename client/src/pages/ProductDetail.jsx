@@ -22,7 +22,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || '';
         const { data } = await axios.get(`${apiUrl}/api/products/${id}`);
         setProduct(data);
       } catch (error) {
@@ -48,7 +48,7 @@ const ProductDetail = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       await axios.post(`${apiUrl}/api/users/cart`, { productId: product._id, quantity: 1 }, config);
       toast.success('Added to your cart!');
       refreshCart();
@@ -74,7 +74,7 @@ const ProductDetail = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       await axios.post(`${apiUrl}/api/users/cart`, { productId: product._id, quantity: 1 }, config);
       refreshCart();
       navigate('/checkout');
