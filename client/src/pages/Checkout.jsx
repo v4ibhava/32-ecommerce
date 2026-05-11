@@ -136,8 +136,21 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (!shippingAddress.fullName || !shippingAddress.address || !shippingAddress.city || !shippingAddress.pincode) {
-      toast.error('Please fill in all shipping details');
+    // Detailed Validation
+    if (!shippingAddress.fullName || shippingAddress.fullName.trim().length < 2) {
+      toast.error('Please enter a valid full name');
+      return;
+    }
+    if (!shippingAddress.address || shippingAddress.address.trim().length < 10) {
+      toast.error('Please enter a complete shipping address (min 10 characters)');
+      return;
+    }
+    if (!shippingAddress.city || shippingAddress.city.trim().length < 2) {
+      toast.error('Please enter a valid city');
+      return;
+    }
+    if (!shippingAddress.pincode || !/^\d{6}$/.test(shippingAddress.pincode)) {
+      toast.error('Please enter a valid 6-digit pincode');
       return;
     }
 

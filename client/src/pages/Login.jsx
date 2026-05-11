@@ -13,6 +13,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Frontend Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
