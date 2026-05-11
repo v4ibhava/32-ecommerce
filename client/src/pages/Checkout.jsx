@@ -116,12 +116,20 @@ const Checkout = () => {
         },
         theme: {
           color: '#2563eb'
+        },
+        modal: {
+          ondismiss: () => {
+            toast.error('Payment window closed');
+            reject(new Error('Payment cancelled'));
+          }
         }
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-      rzp.on('payment.failed', () => {
+      rzp.on('payment.failed', (response) => {
+        console.error('Razorpay payment failed:', response.error);
+        toast.error('Payment failed: ' + response.error.description);
         reject(new Error('Payment failed'));
       });
     });
@@ -189,8 +197,12 @@ const Checkout = () => {
       setOrderSuccess(true);
     } catch (error) {
       console.error('Order error:', error);
-      if (error.message !== 'Payment failed') {
-        toast.error('Failed to place order');
+      
+      // We handle Razorpay specific errors separately in handleRazorpayPayment
+      // So we only toast if it's a general order creation error or server error
+      if (error.message !== 'Payment failed' && error.message !== 'Payment cancelled') {
+        const errorMessage = error.response?.data?.message || 'Failed to place order';
+        toast.error(errorMessage);
       }
     } finally {
       setPlacingOrder(false);
